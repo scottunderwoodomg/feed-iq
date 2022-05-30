@@ -1,0 +1,12 @@
+<!doctype html>
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Hey {{ user.username }}, welcome to FeedIQ!</h1>
+<h3>Latest Feeds:</h3>
+{% for feed in feeds %}
+<div>
+    <p>{{ feed.feed_type }} Feed at {{ feed.feed_datetime }}</p>
+</div>
+{% endfor %}
+{% endblock %}}
