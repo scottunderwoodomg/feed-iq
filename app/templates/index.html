@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Hey {{ user.username }}, welcome to FeedIQ!</h1>
+<h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
 <h3>Latest Feeds:</h3>
 {% for feed in feeds %}
 <div>
