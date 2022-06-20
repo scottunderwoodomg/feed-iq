@@ -76,3 +76,22 @@ def register():
         flash("Thanks for registering!")
         return redirect(url_for("login"))
     return render_template("register.html", title="Register", form=form)
+
+
+@app.route("/user/<username>")
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    feeds = [
+        {
+            "child": "Charlie",
+            "feed_datetime": datetime(2022, 5, 29, 11, 46, 42),
+            "feed_type": "Breast",
+        },
+        {
+            "child": "Charlie",
+            "feed_datetime": datetime(2022, 5, 29, 8, 35, 41),
+            "feed_type": "Breast",
+        },
+    ]
+    return render_template("user.html", user=user, feeds=feeds)

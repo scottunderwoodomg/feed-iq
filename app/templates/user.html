@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>User: {{ user.username }}</h1>
+<hr>
+<h3>Latest Feeds:</h3>
+{% for feed in feeds %}
+<div>
+    <p>{{ feed.feed_type }} Feed at {{ feed.feed_datetime }}</p>
+</div>
+{% endfor %}
+{% endblock %}
