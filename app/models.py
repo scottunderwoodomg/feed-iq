@@ -11,7 +11,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     # local_time_zone to be added later
-    parent = db.relationship("Parent", backref="user", lazy="dynamic")
+    family = db.relationship("Family", backref="user", lazy="dynamic")
 
     def __repr__(self):
         return "<User {}>".format(self.username)
@@ -28,23 +28,22 @@ def load_user(id):
     return User.query.get(int(id))
 
 
-class Parent(db.Model):
+class Family(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    parent_first_name = db.Column(db.String(120))
+    family_name = db.Column(db.String(120))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    children = db.relationship("Child", backref="parent", lazy="dynamic")
-    # children list?
+    children = db.relationship("Child", backref="family", lazy="dynamic")
 
     def __repr__(self):
-        return "<Parent {}>".format(self.parent_first_name)
+        return "<Family {}>".format(self.family_name)
 
 
 class Child(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     child_first_name = db.Column(db.String(120))
     # TODO add in child last name?
-    parent_id = db.Column(
-        db.Integer, db.ForeignKey("parent.id")
+    family_id = db.Column(
+        db.Integer, db.ForeignKey("family.id")
     )  # TODO: need to make this support multiple parents
     feeds = db.relationship("Feed", backref="child", lazy="dynamic")
 

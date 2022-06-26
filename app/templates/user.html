@@ -3,6 +3,33 @@
 {% block content %}
 <h1>User: {{ user.username }}</h1>
 <hr>
+<h3>User's Families:</h3>
+{% if create_family_form == None %}
+<form action="" method="post">
+    {{ select_family_form.hidden_tag() }}
+    <p>
+        {{ select_family_form.selected_family(size=1) }} {{ select_family_form.submit() }}
+    </p>
+</form>
+{% endif %}
+{% for family in user_families %}
+<div>
+    <p>{{ family.family_name }}</p>
+</div>
+{% endfor %}
+{% if select_family_form == None %}
+<form action="" method="post">
+    {{ create_family_form.hidden_tag() }}
+    <p>
+        {{ create_family_form.family_name.label }}<br>
+        {{ create_family_form.family_name(size=32) }}
+        {% for error in create_family_form.family_name.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </p>
+    <p>{{ create_family_form.submit() }}</p>
+</form>
+{% endif %}
 <h3>Latest Feeds:</h3>
 {% for feed in feeds %}
 <div>
