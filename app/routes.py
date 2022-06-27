@@ -12,6 +12,10 @@ from app import app
 from app import db
 from app.forms import LoginForm
 from app.forms import RegistrationForm
+from app.forms import CreateFamilyForm
+from app.forms import AddChildForm
+from app.models import Child
+from app.models import Family
 from app.models import User
 
 from datetime import datetime
@@ -76,3 +80,50 @@ def register():
         flash("Thanks for registering!")
         return redirect(url_for("login"))
     return render_template("register.html", title="Register", form=form)
+
+
+@app.route("/user/<username>", methods=["GET", "POST"])
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    user_family = Family.query.filter_by(user_id=current_user.get_id()).first()
+
+    if user_family is not None:
+        create_family_form = None
+        user_children = [
+            {"child_id": c.id, "child_name": c.child_first_name}
+            for c in Child.query.filter_by(family_id=user_family.id)
+        ]
+        add_child_form = AddChildForm()
+        if add_child_form.validate_on_submit():
+            user_family_id = user_family.id
+            child = Child(
+                child_first_name=add_child_form.child_first_name.data,
+                family_id=user_family_id,
+            )
+            db.session.add(child)
+            db.session.commit()
+            flash("Child added!")
+            return redirect(url_for("user", username=current_user.username))
+    else:
+        add_child_form = None
+        user_children = None
+        create_family_form = CreateFamilyForm()
+        if create_family_form.validate_on_submit():
+            current_user_id = current_user.get_id()
+            family = Family(
+                family_name=create_family_form.family_name.data, user_id=current_user_id
+            )
+            db.session.add(family)
+            db.session.commit()
+            flash("Family created!")
+            return redirect(url_for("user", username=current_user.username))
+
+    return render_template(
+        "user.html",
+        user=user,
+        user_family=user_family,
+        user_children=user_children,
+        create_family_form=create_family_form,
+        add_child_form=add_child_form,
+    )
