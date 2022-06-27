@@ -14,8 +14,10 @@ from app.forms import LoginForm
 from app.forms import RegistrationForm
 from app.forms import CreateFamilyForm
 from app.forms import AddChildForm
+from app.forms import LogFeedForm
 from app.models import Child
 from app.models import Family
+from app.models import Feed
 from app.models import User
 
 from datetime import datetime
@@ -23,11 +25,30 @@ from datetime import datetime
 from werkzeug.urls import url_parse
 
 
-@app.route("/")
-@app.route("/index")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
     # user = {"username": "Scott"} <- Can remove this stand in
+    user_children = Child.query.filter_by(
+        family_id=Family.query.filter_by(user_id=current_user.get_id()).first().id
+    ).all()
+
+    if user_children is not None:
+        log_feed_form = LogFeedForm()
+        log_feed_form.selected_child.choices = [
+            (c.id, c.child_first_name) for c in user_children
+        ]
+        if log_feed_form.validate_on_submit():
+            feed = Feed(
+                feed_type=log_feed_form.feed_type.data,
+                child_id=log_feed_form.selected_child.data,
+            )
+            db.session.add(feed)
+            db.session.commit()
+            flash("Feed submitted!")
+            return redirect(url_for("index"))
+
     feeds = [
         {
             "child": "Charlie",
@@ -40,7 +61,13 @@ def index():
             "feed_type": "Breast",
         },
     ]
-    return render_template("index.html", title="Home", feeds=feeds)
+    return render_template(
+        "index.html",
+        title="Home",
+        feeds=feeds,
+        user_children=user_children,
+        log_feed_form=log_feed_form,
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
