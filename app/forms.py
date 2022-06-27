@@ -3,7 +3,6 @@ from wtforms import StringField
 from wtforms import PasswordField
 from wtforms import BooleanField
 
-from wtforms import SelectField
 from wtforms import SubmitField
 from wtforms.validators import ValidationError
 from wtforms.validators import DataRequired
@@ -11,6 +10,7 @@ from wtforms.validators import Email
 from wtforms.validators import EqualTo
 from app.models import User
 from app.models import Family
+from app.models import Child
 from flask_login import current_user
 
 
@@ -42,21 +42,23 @@ class RegistrationForm(FlaskForm):
 
 
 class CreateFamilyForm(FlaskForm):
-    # TODO: Form should only show up if a user does not already have a family
     family_name = StringField("Add a new family", validators=[DataRequired()])
     submit = SubmitField("Create")
 
-    # TODO: Can probably remove this, may also enforce one family per user at a db level?
-    def validate_family_name(self, family_name):
-        existing_family = Family.query.filter_by(
-            family_name=family_name.data, user_id=current_user.get_id()
+
+class AddChildForm(FlaskForm):
+    child_first_name = StringField(
+        "Add a child to your family", validators=[DataRequired()]
+    )
+    submit = SubmitField("Create")
+
+    # TODO: Need to add protection against adding same child with name case changes
+    def validate_child_first_name(self, child_first_name):
+        existing_child = Child.query.filter_by(
+            child_first_name=child_first_name.data,
+            family_id=Family.query.filter_by(user_id=current_user.get_id()).first().id,
         ).first()
-        if existing_family is not None:
+        if existing_child is not None:
             raise ValidationError(
-                "A family with this name already exists on your account."
+                "A child with this name has already been added to your family."
             )
-
-
-class SelectFamilyForm(FlaskForm):
-    selected_family = SelectField("Select active family", coerce=int)
-    submit = SubmitField("Select")

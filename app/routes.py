@@ -13,8 +13,8 @@ from app import db
 from app.forms import LoginForm
 from app.forms import RegistrationForm
 from app.forms import CreateFamilyForm
-
-from app.forms import SelectFamilyForm
+from app.forms import AddChildForm
+from app.models import Child
 from app.models import Family
 from app.models import User
 
@@ -90,15 +90,24 @@ def user(username):
 
     if user_family is not None:
         create_family_form = None
-        # TODO: Replace with create kid, but keep as reference for how to do select back on the main page
-        available_families = Family.query.filter_by(user_id=current_user.get_id())
-        family_list = [(f.id, f.family_name) for f in available_families]
-        select_family_form = SelectFamilyForm()
-        select_family_form.selected_family.choices = [
-            (-1, "Select an active family")
-        ] + family_list
+        user_children = [
+            {"child_id": c.id, "child_name": c.child_first_name}
+            for c in Child.query.filter_by(family_id=user_family.id)
+        ]
+        add_child_form = AddChildForm()
+        if add_child_form.validate_on_submit():
+            user_family_id = user_family.id
+            child = Child(
+                child_first_name=add_child_form.child_first_name.data,
+                family_id=user_family_id,
+            )
+            db.session.add(child)
+            db.session.commit()
+            flash("Child added!")
+            return redirect(url_for("user", username=current_user.username))
     else:
-        select_family_form = None
+        add_child_form = None
+        user_children = None
         create_family_form = CreateFamilyForm()
         if create_family_form.validate_on_submit():
             current_user_id = current_user.get_id()
@@ -110,29 +119,11 @@ def user(username):
             flash("Family created!")
             return redirect(url_for("user", username=current_user.username))
 
-    # TODO: Replace with kids once they have been implemented
-    user_families = [
-        {"family_id": f.id, "family_name": f.family_name}
-        for f in Family.query.filter_by(user_id=current_user.get_id())
-    ]
-
-    feeds = [
-        {
-            "child": "Charlie",
-            "feed_datetime": datetime(2022, 5, 29, 11, 46, 42),
-            "feed_type": "Breast",
-        },
-        {
-            "child": "Charlie",
-            "feed_datetime": datetime(2022, 5, 29, 8, 35, 41),
-            "feed_type": "Breast",
-        },
-    ]
     return render_template(
         "user.html",
         user=user,
-        feeds=feeds,
-        user_families=user_families,
+        user_family=user_family,
+        user_children=user_children,
         create_family_form=create_family_form,
-        select_family_form=select_family_form,
+        add_child_form=add_child_form,
     )
