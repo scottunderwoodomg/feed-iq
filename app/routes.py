@@ -34,6 +34,9 @@ def index():
         family_id=Family.query.filter_by(user_id=current_user.get_id()).first().id
     ).all()
 
+    # TODO: Resolve bug where user_children cannot be loaded for a user just regustered
+    # user_children = None
+
     if user_children is not None:
         log_feed_form = LogFeedForm()
         log_feed_form.selected_child.choices = [
@@ -48,6 +51,8 @@ def index():
             db.session.commit()
             flash("Feed submitted!")
             return redirect(url_for("index"))
+    else:
+        log_feed_form = None
 
     feeds = [
         {
