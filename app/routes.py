@@ -21,7 +21,7 @@ from app.models import Family
 from app.models import Feed
 from app.models import User
 
-from datetime import datetime
+# from datetime import datetime
 
 from werkzeug.urls import url_parse
 
@@ -76,18 +76,8 @@ def index():
         log_feed_form = None
         select_active_child_form = None
 
-    feeds = [
-        {
-            "child": "Charlie",
-            "feed_datetime": datetime(2022, 5, 29, 11, 46, 42),
-            "feed_type": "Breast",
-        },
-        {
-            "child": "Charlie",
-            "feed_datetime": datetime(2022, 5, 29, 8, 35, 41),
-            "feed_type": "Breast",
-        },
-    ]
+    feeds = Feed.query.filter_by(child_id=user_active_child).all()
+
     return render_template(
         "index.html",
         title="Home",
