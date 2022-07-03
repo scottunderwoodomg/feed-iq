@@ -4,16 +4,21 @@
 {% block content %}
 <h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
 {% if user_children != None %}
-<h3>Submit a Feed</h3>
 <form action="" method="post">
-    {{ log_feed_form.hidden_tag() }}
+    {{ select_active_child_form.hidden_tag() }}
     <p>
-        {{ log_feed_form.selected_child.label }}<br>
-        {{ log_feed_form.selected_child(size=1) }}
-        {% for error in log_feed_form.selected_child.errors %}
+        {{ select_active_child_form.selected_child.label }}<br>
+        {{ select_active_child_form.selected_child(size=1) }}
+        {% for error in select_active_child_form.selected_child.errors %}
         <span style="color: red;">[{{ error }}]</span>
         {% endfor %}
+        {{ select_active_child_form.submit() }}
     </p>
+</form>
+<h3>Submit a Feed</h3>
+<p>Active Child: {{ user_active_child_name }}</p>
+<form action="" method="post">
+    {{ log_feed_form.hidden_tag() }}
     {% for subfield in log_feed_form.feed_type %}
     <tr>
         <td>{{ subfield.label }}</td>

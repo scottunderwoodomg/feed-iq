@@ -15,6 +15,7 @@ from app.forms import RegistrationForm
 from app.forms import CreateFamilyForm
 from app.forms import AddChildForm
 from app.forms import LogFeedForm
+from app.forms import SelectActiveChildForm
 from app.models import Child
 from app.models import Family
 from app.models import Feed
@@ -34,18 +35,38 @@ def index():
         family_id=Family.query.filter_by(user_id=current_user.get_id()).first().id
     ).all()
 
+    user_active_child = (
+        User.query.filter_by(id=current_user.get_id()).first().active_child
+    )
+
+    if user_active_child is not None:
+        user_active_child_name = (
+            Child.query.filter_by(id=user_active_child).first().child_first_name
+        )
+    else:
+        user_active_child_name = None
+
     # TODO: Resolve bug where user_children cannot be loaded for a user just regustered
     # user_children = None
 
     if user_children is not None:
-        log_feed_form = LogFeedForm()
-        log_feed_form.selected_child.choices = [
+        select_active_child_form = SelectActiveChildForm()
+        select_active_child_form.selected_child.choices = [
             (c.id, c.child_first_name) for c in user_children
         ]
+        if select_active_child_form.validate_on_submit():
+            db.session.query(User).filter(User.id == current_user.get_id()).update(
+                {"active_child": select_active_child_form.selected_child.data}
+            )
+            db.session.commit()
+            flash("Active child updated")
+            return redirect(url_for("index"))
+
+        log_feed_form = LogFeedForm()
         if log_feed_form.validate_on_submit():
             feed = Feed(
                 feed_type=log_feed_form.feed_type.data,
-                child_id=log_feed_form.selected_child.data,
+                child_id=user_active_child,
             )
             db.session.add(feed)
             db.session.commit()
@@ -53,6 +74,7 @@ def index():
             return redirect(url_for("index"))
     else:
         log_feed_form = None
+        select_active_child_form = None
 
     feeds = [
         {
@@ -71,7 +93,9 @@ def index():
         title="Home",
         feeds=feeds,
         user_children=user_children,
+        user_active_child_name=user_active_child_name,
         log_feed_form=log_feed_form,
+        select_active_child_form=select_active_child_form,
     )
 
 
