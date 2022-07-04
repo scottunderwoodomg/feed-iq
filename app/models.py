@@ -52,7 +52,6 @@ class Child(db.Model):
         return "<Child {}>".format(self.child_first_name)
 
 
-# TODO: Potentially rename the feed model to something else?
 class Feed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     feed_timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)

@@ -30,10 +30,14 @@ from werkzeug.urls import url_parse
 @app.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
-    # user = {"username": "Scott"} <- Can remove this stand in
-    user_children = Child.query.filter_by(
-        family_id=Family.query.filter_by(user_id=current_user.get_id()).first().id
-    ).all()
+    # TODO: Clean up this code, potentially generalize and import since
+    #   the checks may be used elsewhere too
+    user_family = Family.query.filter_by(user_id=current_user.get_id()).first()
+
+    if user_family is not None:
+        user_children = Child.query.filter_by(family_id=user_family.id).all()
+    else:
+        user_children = None
 
     user_active_child = (
         User.query.filter_by(id=current_user.get_id()).first().active_child
@@ -45,9 +49,6 @@ def index():
         )
     else:
         user_active_child_name = None
-
-    # TODO: Resolve bug where user_children cannot be loaded for a user just regustered
-    # user_children = None
 
     if user_children is not None:
         select_active_child_form = SelectActiveChildForm()
