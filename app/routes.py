@@ -39,16 +39,10 @@ def index():
     else:
         user_children = None
 
+    # TODO: explore converting this into a global variable
     user_active_child = (
         User.query.filter_by(id=current_user.get_id()).first().active_child
     )
-
-    if user_active_child is not None:
-        user_active_child_name = (
-            Child.query.filter_by(id=user_active_child).first().child_first_name
-        )
-    else:
-        user_active_child_name = None
 
     if user_children is not None:
         select_active_child_form = SelectActiveChildForm()
@@ -84,7 +78,9 @@ def index():
         title="Home",
         feeds=feeds,
         user_children=user_children,
-        user_active_child_name=user_active_child_name,
+        user_active_child_name=Child.query.filter_by(id=user_active_child)
+        .first()
+        .child_first_name,
         log_feed_form=log_feed_form,
         select_active_child_form=select_active_child_form,
     )

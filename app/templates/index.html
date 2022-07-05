@@ -1,35 +1,23 @@
-<!doctype html>
 {% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
-{% block content %}
+{% block app_content %}
 <h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
 {% if user_children != None %}
-<form action="" method="post">
-    {{ select_active_child_form.hidden_tag() }}
-    <p>
-        {{ select_active_child_form.selected_child.label }}<br>
-        {{ select_active_child_form.selected_child(size=1) }}
-        {% for error in select_active_child_form.selected_child.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        {{ select_active_child_form.submit() }}
-    </p>
-</form>
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(select_active_child_form) }}
+    </div>
+</div>
+<br>
 <h3>Submit a Feed</h3>
 <p>Active Child: {{ user_active_child_name }}</p>
-<form action="" method="post">
-    {{ log_feed_form.hidden_tag() }}
-    {% for subfield in log_feed_form.feed_type %}
-    <tr>
-        <td>{{ subfield.label }}</td>
-        <td>{{ subfield }}</td>
-    </tr>
-    {% endfor %}
-    {% for error in log_feed_form.feed_type.errors %}
-    <span style="color: red;">[{{ error }}]</span>
-    {% endfor %}
-    <p>{{ log_feed_form.submit() }}</p>
-</form>
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(log_feed_form) }}
+    </div>
+</div>
+<br>
 {% endif %}
 <h3>Latest Feeds:</h3>
 {% for feed in feeds %}
