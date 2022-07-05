@@ -4,14 +4,7 @@
 {% block app_content %}
 <h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
 {% if user_children != None %}
-<div class="row">
-    <div class="col-md-4">
-        {{ wtf.quick_form(select_active_child_form) }}
-    </div>
-</div>
-<br>
-<h3>Submit a Feed</h3>
-<p>Active Child: {{ user_active_child_name }}</p>
+<h3>Submit a feed</h3>
 <div class="row">
     <div class="col-md-4">
         {{ wtf.quick_form(log_feed_form) }}
@@ -19,7 +12,7 @@
 </div>
 <br>
 {% endif %}
-<h3>Latest Feeds:</h3>
+<h3>Latest feeds for {{ user_active_child_name }}</h3>
 {% for feed in feeds %}
 <div>
     <p>{{ feed.feed_type }} Feed at {{ feed.feed_timestamp }}</p>

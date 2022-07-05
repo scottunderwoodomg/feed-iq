@@ -68,6 +68,7 @@ class AddChildForm(FlaskForm):
 
 
 class LogFeedForm(FlaskForm):
+    selected_child = SelectField("Select active child", coerce=int)
     feed_type = RadioField(
         "Type of feed",
         choices=[
@@ -78,8 +79,3 @@ class LogFeedForm(FlaskForm):
         validators=[DataRequired()],
     )
     submit = SubmitField("Submit Feed")
-
-
-class SelectActiveChildForm(FlaskForm):
-    selected_child = SelectField("Select active child", coerce=int)
-    submit = SubmitField("Select")
