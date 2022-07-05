@@ -43,12 +43,19 @@ def index():
     user_active_child = (
         User.query.filter_by(id=current_user.get_id()).first().active_child
     )
+    print(user_active_child)
 
     if user_children is not None:
         select_active_child_form = SelectActiveChildForm()
-        select_active_child_form.selected_child.choices = [
-            (c.id, c.child_first_name) for c in user_children
-        ]
+
+        # TODO: Turn the list reorder into a general lib function
+        user_children_list = [(c.id, c.child_first_name) for c in user_children]
+        for c in user_children_list:
+            if c[0] == user_active_child:
+                user_children_list.insert(0, user_children_list.pop())
+
+        select_active_child_form.selected_child.choices = user_children_list
+        print(select_active_child_form.selected_child.choices)
         if select_active_child_form.validate_on_submit():
             db.session.query(User).filter(User.id == current_user.get_id()).update(
                 {"active_child": select_active_child_form.selected_child.data}
