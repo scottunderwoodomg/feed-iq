@@ -1,16 +1,19 @@
+# from random import choices
 from flask_wtf import FlaskForm
-from wtforms import StringField
-from wtforms import PasswordField
 from wtforms import BooleanField
+from wtforms import PasswordField
+from wtforms import RadioField
+from wtforms import SelectField
+from wtforms import StringField
 
 from wtforms import SubmitField
-from wtforms.validators import ValidationError
 from wtforms.validators import DataRequired
 from wtforms.validators import Email
 from wtforms.validators import EqualTo
-from app.models import User
-from app.models import Family
+from wtforms.validators import ValidationError
 from app.models import Child
+from app.models import Family
+from app.models import User
 from flask_login import current_user
 
 
@@ -62,3 +65,17 @@ class AddChildForm(FlaskForm):
             raise ValidationError(
                 "A child with this name has already been added to your family."
             )
+
+
+class LogFeedForm(FlaskForm):
+    selected_child = SelectField("Select active child", coerce=int)
+    feed_type = RadioField(
+        "Type of feed",
+        choices=[
+            ("breast", "Breast"),
+            ("bottle", "Bottle"),
+            ("breast_plus_bottle", "Breast Plus Bottle"),
+        ],
+        validators=[DataRequired()],
+    )
+    submit = SubmitField("Submit Feed")

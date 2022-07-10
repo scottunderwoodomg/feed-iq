@@ -1,12 +1,21 @@
-<!doctype html>
 {% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
-{% block content %}
+{% block app_content %}
 <h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
-<h3>Latest Feeds:</h3>
+{% if user_children != None %}
+<h3>Submit a feed</h3>
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(log_feed_form) }}
+    </div>
+</div>
+<br>
+{% endif %}
+<h3>Latest feeds for {{ user_active_child_name }}</h3>
 {% for feed in feeds %}
 <div>
-    <p>{{ feed.feed_type }} Feed at {{ feed.feed_datetime }}</p>
+    <p>{{ feed.feed_type }} Feed at {{ feed.feed_timestamp }}</p>
 </div>
 {% endfor %}
 {% endblock %}}

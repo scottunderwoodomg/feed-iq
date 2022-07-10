@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
-{% block content %}
+{% block app_content %}
 <h1>User: {{ user.username }}</h1>
 <hr>
 {% if create_family_form == None %}
@@ -11,29 +12,19 @@
     <p>{{ child.child_name }}</p>
 </div>
 {% endfor %}
-<form action="" method="post">
-    {{ add_child_form.hidden_tag() }}
-    <p>
-        {{ add_child_form.child_first_name.label }}<br>
-        {{ add_child_form.child_first_name(size=32) }}
-        {% for error in add_child_form.child_first_name.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-    </p>
-    <p>{{ add_child_form.submit() }}</p>
-</form>
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(add_child_form) }}
+    </div>
+</div>
+<br>
 {% endif %}
 {% if add_child_form == None %}
-<form action="" method="post">
-    {{ create_family_form.hidden_tag() }}
-    <p>
-        {{ create_family_form.family_name.label }}<br>
-        {{ create_family_form.family_name(size=32) }}
-        {% for error in create_family_form.family_name.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-    </p>
-    <p>{{ create_family_form.submit() }}</p>
-</form>
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(create_family_form) }}
+    </div>
+</div>
+<br>
 {% endif %}
 {% endblock %}

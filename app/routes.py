@@ -14,33 +14,71 @@ from app.forms import LoginForm
 from app.forms import RegistrationForm
 from app.forms import CreateFamilyForm
 from app.forms import AddChildForm
+from app.forms import LogFeedForm
 from app.models import Child
 from app.models import Family
+from app.models import Feed
 from app.models import User
 
-from datetime import datetime
+# from datetime import datetime
 
 from werkzeug.urls import url_parse
 
 
-@app.route("/")
-@app.route("/index")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
-    # user = {"username": "Scott"} <- Can remove this stand in
-    feeds = [
-        {
-            "child": "Charlie",
-            "feed_datetime": datetime(2022, 5, 29, 11, 46, 42),
-            "feed_type": "Breast",
-        },
-        {
-            "child": "Charlie",
-            "feed_datetime": datetime(2022, 5, 29, 8, 35, 41),
-            "feed_type": "Breast",
-        },
-    ]
-    return render_template("index.html", title="Home", feeds=feeds)
+    # TODO: Clean up this code, potentially generalize and import since
+    #   the checks may be used elsewhere too
+    user_family = Family.query.filter_by(user_id=current_user.get_id()).first()
+
+    if user_family is not None:
+        user_children = Child.query.filter_by(family_id=user_family.id).all()
+    else:
+        user_children = None
+
+    # TODO: explore converting this into a global variable
+    user_active_child = (
+        User.query.filter_by(id=current_user.get_id()).first().active_child
+    )
+
+    if user_children is not None:
+        log_feed_form = LogFeedForm()
+        # TODO: Turn the list reorder into a general lib function
+        user_children_list = [(c.id, c.child_first_name) for c in user_children]
+        for c in user_children_list:
+            if c[0] == user_active_child:
+                user_children_list.insert(0, user_children_list.pop())
+
+        log_feed_form.selected_child.choices = user_children_list
+        if log_feed_form.validate_on_submit():
+            feed = Feed(
+                feed_type=log_feed_form.feed_type.data,
+                child_id=log_feed_form.selected_child.data,
+            )
+            db.session.add(feed)
+            db.session.query(User).filter(User.id == current_user.get_id()).update(
+                {"active_child": log_feed_form.selected_child.data}
+            )
+            db.session.commit()
+            flash("Feed submitted!")
+            return redirect(url_for("index"))
+    else:
+        log_feed_form = None
+
+    feeds = Feed.query.filter_by(child_id=user_active_child).all()
+
+    return render_template(
+        "index.html",
+        title="Home",
+        feeds=feeds,
+        user_children=user_children,
+        user_active_child_name=Child.query.filter_by(id=user_active_child)
+        .first()
+        .child_first_name,
+        log_feed_form=log_feed_form,
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
