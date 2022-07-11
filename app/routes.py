@@ -35,8 +35,8 @@ def index():
 
     if user_family is not None:
         user_children = Child.query.filter_by(family_id=user_family.id).all()
-    else:
-        user_children = None
+    # else:
+    #    user_children = None
 
     # TODO: explore converting this into a global variable
     user_active_child = (
