@@ -14,4 +14,4 @@ login = LoginManager(app)
 login.login_view = "login"
 bootstrap = Bootstrap(app)
 
-from app import routes, models  # noqa
+from app import routes, models, errors  # noqa
