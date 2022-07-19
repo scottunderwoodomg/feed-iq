@@ -35,13 +35,20 @@ def index():
 
     if user_family is not None:
         user_children = Child.query.filter_by(family_id=user_family.id).all()
-    # else:
-    #    user_children = None
+    else:
+        user_children = None
 
     # TODO: explore converting this into a global variable
     user_active_child = (
         User.query.filter_by(id=current_user.get_id()).first().active_child
     )
+
+    if user_active_child is not None:
+        user_active_child_name = (
+            Child.query.filter_by(id=user_active_child).first().child_first_name
+        )
+    else:
+        user_active_child_name = None
 
     if user_children is not None:
         log_feed_form = LogFeedForm()
@@ -74,9 +81,7 @@ def index():
         title="Home",
         feeds=feeds,
         user_children=user_children,
-        user_active_child_name=Child.query.filter_by(id=user_active_child)
-        .first()
-        .child_first_name,
+        user_active_child_name=user_active_child_name,
         log_feed_form=log_feed_form,
     )
 
@@ -164,4 +169,31 @@ def user(username):
         user_children=user_children,
         create_family_form=create_family_form,
         add_child_form=add_child_form,
+    )
+
+
+# @app.route("/feed_history", methods=["GET", "POST"])
+@app.route("/feed_history")
+@login_required
+def feed_history():
+    user_active_child = (
+        User.query.filter_by(id=current_user.get_id()).first().active_child
+    )
+
+    if user_active_child is not None:
+        active_child_feeds = (
+            db.session.query(Feed)
+            .join(Child, Child.id == Feed.child_id)
+            .filter(Feed.child_id == user_active_child)
+            .all()
+        )
+    else:
+        active_child_feeds = None
+
+    return render_template(
+        "feed_history.html",
+        user_active_child_name=Child.query.filter_by(id=user_active_child)
+        .first()
+        .child_first_name,
+        feeds=active_child_feeds,
     )

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+{% if active_child_feeds != None %}
+<div>
+    <h1>Feed History: {{ user_active_child_name }}</h1>
+    <hr>
+    <div id="feed_history_table"></div>
+</div>
+<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+<script>
+    new gridjs.Grid({
+        columns: [
+            { id: 'child_first_name', name: 'Child Name' },
+            { id: 'feed_type', name: 'Feed Type' },
+            { id: 'feed_timestamp', name: 'Feed Time', sort: true },
+        ],
+        data: [
+            {% for feed in feeds %}
+                {
+            child_first_name: '{{ feed.child.child_first_name }}',
+            feed_type: '{{ feed.feed_type }}',
+            feed_timestamp: '{{ feed.feed_timestamp }}',
+        },
+        {% endfor %}
+        ],
+        search: true,
+        sort: true,
+        pagination: true,
+    }).render(document.getElementById('feed_history_table'));
+</script>
+{% endif %}
+{% endblock %}
