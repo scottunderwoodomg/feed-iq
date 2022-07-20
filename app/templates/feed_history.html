@@ -16,15 +16,10 @@
             { id: 'feed_type', name: 'Feed Type' },
             { id: 'feed_timestamp', name: 'Feed Time', sort: true },
         ],
-        data: [
-            {% for feed in feeds %}
-                {
-            child_first_name: '{{ feed.child.child_first_name }}',
-            feed_type: '{{ feed.feed_type }}',
-            feed_timestamp: '{{ feed.feed_timestamp }}',
+        server: {
+            url: '/api/feed_history_data',
+            then: results => results.data,
         },
-        {% endfor %}
-        ],
         search: true,
         sort: true,
         pagination: true,

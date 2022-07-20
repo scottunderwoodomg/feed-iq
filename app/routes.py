@@ -173,9 +173,30 @@ def user(username):
 
 
 # @app.route("/feed_history", methods=["GET", "POST"])
+# TODO: Update this route so that the relevent child_id is fed in by dynamically
+#   populated hyperlinks next to each child in a family on the user profile page
 @app.route("/feed_history")
 @login_required
 def feed_history():
+    return render_template(
+        "feed_history.html",
+        user_active_child_name=Child.query.filter_by(
+            id=User.query.filter_by(id=current_user.get_id()).first().active_child
+        )
+        .first()
+        .child_first_name,
+    )
+
+
+@app.route("/api/feed_history_data")
+def feed_history_data():
+    def feed_data_to_dict(feed):
+        return {
+            "child_first_name": feed.child.child_first_name,
+            "feed_type": feed.feed_type,
+            "feed_timestamp": feed.feed_timestamp,
+        }
+
     user_active_child = (
         User.query.filter_by(id=current_user.get_id()).first().active_child
     )
@@ -190,10 +211,4 @@ def feed_history():
     else:
         active_child_feeds = None
 
-    return render_template(
-        "feed_history.html",
-        user_active_child_name=Child.query.filter_by(id=user_active_child)
-        .first()
-        .child_first_name,
-        feeds=active_child_feeds,
-    )
+    return {"data": [feed_data_to_dict(feed) for feed in active_child_feeds]}
