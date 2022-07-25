@@ -1,3 +1,4 @@
+from flask import abort
 from flask import render_template
 from flask import flash
 from flask import redirect
@@ -20,7 +21,7 @@ from app.models import Family
 from app.models import Feed
 from app.models import User
 
-# from datetime import datetime
+from datetime import datetime
 
 from werkzeug.urls import url_parse
 
@@ -192,6 +193,7 @@ def feed_history():
 def feed_history_data():
     def feed_data_to_dict(feed):
         return {
+            "id": feed.id,
             "child_first_name": feed.child.child_first_name,
             "feed_type": feed.feed_type,
             "feed_timestamp": feed.feed_timestamp,
@@ -206,9 +208,60 @@ def feed_history_data():
             db.session.query(Feed)
             .join(Child, Child.id == Feed.child_id)
             .filter(Feed.child_id == user_active_child)
-            .all()
         )
     else:
         active_child_feeds = None
 
-    return {"data": [feed_data_to_dict(feed) for feed in active_child_feeds]}
+    # search filter
+    search = request.args.get("search")
+    if search:
+        active_child_feeds = active_child_feeds.filter(
+            db.or_(
+                Feed.feed_type.like(f"%{search}%"),
+                Feed.feed_timestamp.like(f"%{search}%"),
+            )
+        )
+    total = active_child_feeds.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            ts = s[1:]
+            if ts not in ["feed_timestamp"]:
+                ts = "feed_timestamp"
+            col = getattr(Feed, ts)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            active_child_feeds = active_child_feeds.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        active_child_feeds = active_child_feeds.offset(start).limit(length)
+
+    # response
+    return {
+        "data": [feed_data_to_dict(feed) for feed in active_child_feeds],
+        "total": total,
+    }
+
+
+@app.route("/api/feed_history_data", methods=["POST"])
+def update():
+    data = request.get_json()
+    if "id" not in data:
+        abort(400)
+    feed = Feed.query.get(data["id"])
+    for field in ["feed_type", "feed_timestamp"]:
+        if field in data:
+            setattr(
+                feed, field, datetime.strptime(data[field], "%a, %d %b %Y %H:%M:%S GMT")
+            )
+    db.session.commit()
+    return "", 204
