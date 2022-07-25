@@ -176,21 +176,20 @@ def user(username):
 # @app.route("/feed_history", methods=["GET", "POST"])
 # TODO: Update this route so that the relevent child_id is fed in by dynamically
 #   populated hyperlinks next to each child in a family on the user profile page
-@app.route("/feed_history")
+@app.route("/feed_history/<child_id>")
 @login_required
-def feed_history():
+def feed_history(child_id):
     return render_template(
         "feed_history.html",
-        user_active_child_name=Child.query.filter_by(
-            id=User.query.filter_by(id=current_user.get_id()).first().active_child
-        )
+        user_active_child_name=Child.query.filter_by(id=child_id)
         .first()
         .child_first_name,
+        selected_child_id=child_id,
     )
 
 
-@app.route("/api/feed_history_data")
-def feed_history_data():
+@app.route("/api/feed_history_data/<selected_child_id>")
+def feed_history_data(selected_child_id):
     def feed_data_to_dict(feed):
         return {
             "id": feed.id,
@@ -199,15 +198,11 @@ def feed_history_data():
             "feed_timestamp": feed.feed_timestamp,
         }
 
-    user_active_child = (
-        User.query.filter_by(id=current_user.get_id()).first().active_child
-    )
-
-    if user_active_child is not None:
+    if selected_child_id is not None:
         active_child_feeds = (
             db.session.query(Feed)
             .join(Child, Child.id == Feed.child_id)
-            .filter(Feed.child_id == user_active_child)
+            .filter(Feed.child_id == selected_child_id)
         )
     else:
         active_child_feeds = None
@@ -252,8 +247,8 @@ def feed_history_data():
     }
 
 
-@app.route("/api/feed_history_data", methods=["POST"])
-def update():
+@app.route("/api/feed_history_data/<selected_child_id>", methods=["POST"])
+def feed_history_update(selected_child_id):
     data = request.get_json()
     if "id" not in data:
         abort(400)

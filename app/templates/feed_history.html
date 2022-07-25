@@ -34,7 +34,7 @@
             { id: 'feed_timestamp', name: 'Feed Time', sort: true, 'attributes': editableCellAttributes },
         ],
         server: {
-            url: '/api/feed_history_data',
+            url: "{{ url_for('feed_history_data', selected_child_id=selected_child_id) }}",
             then: results => results.data,
             total: results => results.total,
         },
@@ -78,7 +78,7 @@
     tableDiv.addEventListener('focusout', ev => {
         if (ev.target.tagName === 'TD') {
             if (savedValue !== ev.target.textContent) {
-                fetch('/api/feed_history_data', {
+                fetch("{{ url_for('feed_history_update', selected_child_id=selected_child_id) }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
