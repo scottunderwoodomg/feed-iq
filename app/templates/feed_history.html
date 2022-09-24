@@ -29,9 +29,9 @@
     new gridjs.Grid({
         columns: [
             { id: 'id', 'hidden': true },
-            { id: 'child_first_name', name: 'Child Name', sort: false },
-            { id: 'feed_type', name: 'Feed Type', sort: false, 'attributes': editableCellAttributes },
-            { id: 'feed_timestamp', name: 'Feed Time', 'attributes': editableCellAttributes },
+            { id: 'child_first_name', name: 'Child Name', width: '33.3%', sort: false },
+            { id: 'feed_type', name: 'Feed Type', width: '33.3%', sort: false, 'attributes': editableCellAttributes },
+            { id: 'feed_timestamp', name: 'Feed Time', width: '33.3%', 'attributes': editableCellAttributes },
         ],
         server: {
             url: "{{ url_for('feed_history_data', selected_child_id=selected_child_id) }}",
