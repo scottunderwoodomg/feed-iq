@@ -130,3 +130,6 @@ dmypy.json
 
 # Application DB
 app.db
+
+# Log Files
+logs/

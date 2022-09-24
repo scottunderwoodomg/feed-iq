@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+{% if active_child_feeds != None %}
+<div>
+    <h1>Feed History: {{ user_active_child_name }}</h1>
+    <hr>
+    <p><i>To edit a previous feed type or feed timestamp, edit the value in the relevant cell and press enter</i></p>
+    <div id="feed_history_table"></div>
+</div>
+<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+<script>
+    const tableDiv = document.getElementById('feed_history_table');
+
+    const updateUrl = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributes = (data, row, col) => {
+        if (row) {
+            return { contentEditable: 'true', 'data-element-id': row.cells[0].data };
+        }
+        else {
+            return {};
+        }
+    };
+
+    new gridjs.Grid({
+        columns: [
+            { id: 'id', 'hidden': true },
+            { id: 'child_first_name', name: 'Child Name', width: '33.3%', sort: false },
+            { id: 'feed_type', name: 'Feed Type', width: '33.3%', sort: false, 'attributes': editableCellAttributes },
+            { id: 'feed_timestamp', name: 'Feed Time', width: '33.3%', 'attributes': editableCellAttributes },
+        ],
+        server: {
+            url: "{{ url_for('feed_history_data', selected_child_id=selected_child_id) }}",
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => {
+                    return updateUrl(prev, { search });
+                },
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'child_first_name', 'feed_type', 'feed_timestamp'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrl(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            enabled: true,
+            server: {
+                url: (prev, page, limit) => {
+                    return updateUrl(prev, { start: page * limit, length: limit });
+                },
+            },
+        },
+    }).render(tableDiv);
+
+    let savedValue;
+
+    tableDiv.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValue = ev.target.textContent;
+        }
+    });
+
+    tableDiv.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (savedValue !== ev.target.textContent) {
+                fetch("{{ url_for('feed_history_update', selected_child_id=selected_child_id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValue = undefined;
+        }
+    });
+
+    tableDiv.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValue;
+                ev.target.blur();
+            }
+            else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

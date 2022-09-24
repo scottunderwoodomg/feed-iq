@@ -7,11 +7,23 @@
 {% if create_family_form == None %}
 <h3>The {{ user_family.family_name }} Family:</h3>
 <p>Kids:</p>
-{% for child in user_children %}
 <div>
-    <p>{{ child.child_name }}</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Child Name</th>
+                <th>Feed History Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for child in user_children %}
+            <tr>
+                <td>{{ child.child_name }}</td>
+                <td><a href="{{ url_for('feed_history', child_id=child.child_id) }}">feed history</a></td>
+                {% endfor %}
+        </tbody>
+    </table>
 </div>
-{% endfor %}
 <div class="row">
     <div class="col-md-4">
         {{ wtf.quick_form(add_child_form) }}

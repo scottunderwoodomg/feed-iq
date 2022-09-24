@@ -1,3 +1,4 @@
+from flask import abort
 from flask import render_template
 from flask import flash
 from flask import redirect
@@ -20,7 +21,7 @@ from app.models import Family
 from app.models import Feed
 from app.models import User
 
-# from datetime import datetime
+from datetime import datetime
 
 from werkzeug.urls import url_parse
 
@@ -35,13 +36,20 @@ def index():
 
     if user_family is not None:
         user_children = Child.query.filter_by(family_id=user_family.id).all()
-    # else:
-    #    user_children = None
+    else:
+        user_children = None
 
     # TODO: explore converting this into a global variable
     user_active_child = (
         User.query.filter_by(id=current_user.get_id()).first().active_child
     )
+
+    if user_active_child is not None:
+        user_active_child_name = (
+            Child.query.filter_by(id=user_active_child).first().child_first_name
+        )
+    else:
+        user_active_child_name = None
 
     if user_children is not None:
         log_feed_form = LogFeedForm()
@@ -74,9 +82,7 @@ def index():
         title="Home",
         feeds=feeds,
         user_children=user_children,
-        user_active_child_name=Child.query.filter_by(id=user_active_child)
-        .first()
-        .child_first_name,
+        user_active_child_name=user_active_child_name,
         log_feed_form=log_feed_form,
     )
 
@@ -165,3 +171,89 @@ def user(username):
         create_family_form=create_family_form,
         add_child_form=add_child_form,
     )
+
+
+@app.route("/feed_history/<child_id>")
+@login_required
+def feed_history(child_id):
+    return render_template(
+        "feed_history.html",
+        user_active_child_name=Child.query.filter_by(id=child_id)
+        .first()
+        .child_first_name,
+        selected_child_id=child_id,
+    )
+
+
+@app.route("/api/feed_history_data/<selected_child_id>")
+def feed_history_data(selected_child_id):
+    def feed_data_to_dict(feed):
+        return {
+            "id": feed.id,
+            "child_first_name": feed.child.child_first_name,
+            "feed_type": feed.feed_type,
+            "feed_timestamp": feed.feed_timestamp,
+        }
+
+    if selected_child_id is not None:
+        active_child_feeds = (
+            db.session.query(Feed)
+            .join(Child, Child.id == Feed.child_id)
+            .filter(Feed.child_id == selected_child_id)
+        )
+    else:
+        active_child_feeds = None
+
+    # search filter
+    search = request.args.get("search")
+    if search:
+        active_child_feeds = active_child_feeds.filter(
+            db.or_(
+                Feed.feed_type.like(f"%{search}%"),
+                Feed.feed_timestamp.like(f"%{search}%"),
+            )
+        )
+    total = active_child_feeds.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            ts = s[1:]
+            if ts not in ["feed_timestamp"]:
+                ts = "feed_timestamp"
+            col = getattr(Feed, ts)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            active_child_feeds = active_child_feeds.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        active_child_feeds = active_child_feeds.offset(start).limit(length)
+
+    # response
+    return {
+        "data": [feed_data_to_dict(feed) for feed in active_child_feeds],
+        "total": total,
+    }
+
+
+@app.route("/api/feed_history_data/<selected_child_id>", methods=["POST"])
+def feed_history_update(selected_child_id):
+    data = request.get_json()
+    if "id" not in data:
+        abort(400)
+    feed = Feed.query.get(data["id"])
+    for field in ["feed_type", "feed_timestamp"]:
+        if field in data:
+            setattr(
+                feed, field, datetime.strptime(data[field], "%a, %d %b %Y %H:%M:%S GMT")
+            )
+    db.session.commit()
+    return "", 204
