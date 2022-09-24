@@ -173,9 +173,6 @@ def user(username):
     )
 
 
-# @app.route("/feed_history", methods=["GET", "POST"])
-# TODO: Update this route so that the relevent child_id is fed in by dynamically
-#   populated hyperlinks next to each child in a family on the user profile page
 @app.route("/feed_history/<child_id>")
 @login_required
 def feed_history(child_id):
