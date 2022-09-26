@@ -21,10 +21,7 @@ from app.models import Family
 from app.models import Feed
 from app.models import User
 
-from app.lib.route_helpers import return_user_family
-from app.lib.route_helpers import return_user_children
-from app.lib.route_helpers import return_user_active_child
-from app.lib.route_helpers import return_user_active_child_name
+from app.lib.route_helpers import RouteUser
 
 from datetime import datetime
 
@@ -35,14 +32,10 @@ from werkzeug.urls import url_parse
 @app.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
-    # TODO: Clean up this code, potentially generalize and import since
-    #   the checks may be used elsewhere too
-    user_family = return_user_family()
-    user_children = return_user_children(user_family)
-
-    # TODO: explore converting this into a global variable
-    user_active_child = return_user_active_child()
-    user_active_child_name = return_user_active_child_name(user_active_child)
+    active_user = RouteUser(current_user)
+    user_children = active_user.user_children
+    user_active_child = active_user.user_active_child
+    user_active_child_name = active_user.user_active_child_name
 
     if user_children is not None:
         log_feed_form = LogFeedForm()
@@ -178,6 +171,7 @@ def feed_history(child_id):
     )
 
 
+# TODO: Move the feed history functions into lib?
 @app.route("/api/feed_history_data/<selected_child_id>")
 def feed_history_data(selected_child_id):
     def feed_data_to_dict(feed):
