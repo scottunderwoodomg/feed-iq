@@ -21,6 +21,11 @@ from app.models import Family
 from app.models import Feed
 from app.models import User
 
+from app.lib.route_helpers import return_user_family
+from app.lib.route_helpers import return_user_children
+from app.lib.route_helpers import return_user_active_child
+from app.lib.route_helpers import return_user_active_child_name
+
 from datetime import datetime
 
 from werkzeug.urls import url_parse
@@ -32,24 +37,12 @@ from werkzeug.urls import url_parse
 def index():
     # TODO: Clean up this code, potentially generalize and import since
     #   the checks may be used elsewhere too
-    user_family = Family.query.filter_by(user_id=current_user.get_id()).first()
-
-    if user_family is not None:
-        user_children = Child.query.filter_by(family_id=user_family.id).all()
-    else:
-        user_children = None
+    user_family = return_user_family()
+    user_children = return_user_children(user_family)
 
     # TODO: explore converting this into a global variable
-    user_active_child = (
-        User.query.filter_by(id=current_user.get_id()).first().active_child
-    )
-
-    if user_active_child is not None:
-        user_active_child_name = (
-            Child.query.filter_by(id=user_active_child).first().child_first_name
-        )
-    else:
-        user_active_child_name = None
+    user_active_child = return_user_active_child()
+    user_active_child_name = return_user_active_child_name(user_active_child)
 
     if user_children is not None:
         log_feed_form = LogFeedForm()
