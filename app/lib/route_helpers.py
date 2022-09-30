@@ -2,6 +2,8 @@ from app.models import Child
 from app.models import Family
 from app.models import User
 
+from datetime import datetime
+
 """
 Generalized functions for use across the various routes defined in routes.py 
 """
@@ -39,3 +41,7 @@ class RouteUser:
     def __init__(self, current_user):
         self.active_user = current_user
         self.define_active_user()
+
+
+def return_current_date_string():
+    return datetime.now().strftime("%A, %B %d %Y")

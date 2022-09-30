@@ -21,7 +21,9 @@ from app.models import Family
 from app.models import Feed
 from app.models import User
 
+from app.lib.metric_helpers import UserMetrics
 from app.lib.route_helpers import RouteUser
+from app.lib.route_helpers import return_current_date_string
 
 from datetime import datetime
 
@@ -36,6 +38,7 @@ def index():
     user_children = active_user.user_children
     user_active_child = active_user.user_active_child
     user_active_child_name = active_user.user_active_child_name
+    active_child_metrics = UserMetrics(user_active_child)
 
     if user_children is not None:
         log_feed_form = LogFeedForm()
@@ -61,15 +64,21 @@ def index():
     else:
         log_feed_form = None
 
-    feeds = Feed.query.filter_by(child_id=user_active_child).all()
+    # TODO: Potentially consolidate metric values passed through into template as a single dict
+    current_day_feeds = active_child_metrics.current_day_feeds
+    most_recent_feed = active_child_metrics.most_recent_feed_display_time
+    time_since_last_feed = active_child_metrics.time_since_last_feed
 
     return render_template(
         "index.html",
         title="Home",
-        feeds=feeds,
+        feeds=current_day_feeds,
         user_children=user_children,
         user_active_child_name=user_active_child_name,
         log_feed_form=log_feed_form,
+        most_recent_feed=most_recent_feed,
+        time_since_last_feed=time_since_last_feed,
+        current_date_string=return_current_date_string(),
     )
 
 
