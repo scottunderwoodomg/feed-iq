@@ -4,46 +4,53 @@
 {% block app_content %}
 <h1>User: {{ user.username }}</h1>
 <hr>
-{% if create_family_form == None %}
-<h3>The {{ user_family.family_name }} Family</h3>
-{% if set_active_child_form != None %}
-<div class="row">
-    <div class="col-md-4">
-        {{ wtf.quick_form(set_active_child_form, form_type='inline') }}
-    </div>
-</div>
-<br>
-{% endif %}
 <div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Child Name</th>
-                <th>Feed History Link</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for child in user_children %}
-            <tr>
-                <td>{{ child.child_name }}</td>
-                <td><a href="{{ url_for('feed_history', child_id=child.child_id) }}">feed history</a></td>
-                {% endfor %}
-        </tbody>
-    </table>
-</div>
-<div class="row">
-    <div class="col-md-4">
-        {{ wtf.quick_form(add_child_form, form_type='inline') }}
+    <div style="width: 50%; float: left; padding: 20px;">
+        {% if create_family_form == None %}
+        <h3>The {{ user_family.family_name }} Family</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Child Name</th>
+                    <th>Feed History Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for child in user_children %}
+                <tr>
+                    <td>{{ child.child_name }}</td>
+                    <td><a href="{{ url_for('feed_history', child_id=child.child_id) }}">feed history</a></td>
+                    {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        {% if add_child_form == None %}
+        <div class="row">
+            <div class="col-md-4">
+                {{ wtf.quick_form(create_family_form, form_type='inline') }}
+            </div>
+        </div>
+        <br>
+        {% endif %}
+    </div>
+    <div style="width: 50%; float: right; padding: 20px;">
+        <h3>Family Management</h3>
+        {% if set_active_child_form != None %}
+        <div class="row">
+            <div class="col-md-4">
+                {{ wtf.quick_form(set_active_child_form, form_type='inline') }}
+            </div>
+        </div>
+        <br>
+        {% endif %}
+        {% if create_family_form == None %}
+        <div class="row">
+            <div class="col-md-4">
+                {{ wtf.quick_form(add_child_form, form_type='inline') }}
+            </div>
+        </div>
+        <br>
+        {% endif %}
     </div>
 </div>
-<br>
-{% endif %}
-{% if add_child_form == None %}
-<div class="row">
-    <div class="col-md-4">
-        {{ wtf.quick_form(create_family_form, form_type='inline') }}
-    </div>
-</div>
-<br>
-{% endif %}
 {% endblock %}

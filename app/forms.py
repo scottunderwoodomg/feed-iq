@@ -73,13 +73,8 @@ class SetActiveChildForm(FlaskForm):
 
 
 class LogFeedForm(FlaskForm):
-    feed_type = RadioField(
-        "Type of feed",
-        choices=[
-            ("breast", "Breast"),
-            ("bottle", "Bottle"),
-            ("breast_plus_bottle", "Breast Plus Bottle"),
-        ],
+    feed_type = SelectField(
+        "Select type of feed",
         validators=[DataRequired()],
     )
     submit = SubmitField("Submit Feed")

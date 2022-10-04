@@ -43,6 +43,15 @@ def index():
 
     if user_children is not None:
         log_feed_form = LogFeedForm()
+
+        # TODO: Replace static feed_type_list once user-level type management has been implemented
+        feed_type_list = [
+            ("breast", "Breast"),
+            ("bottle", "Bottle"),
+            ("breast_plus_bottle", "Breast Plus Bottle"),
+        ]
+        log_feed_form.feed_type.choices = feed_type_list
+
         # TODO: Turn the list reorder into a general lib function
         if log_feed_form.validate_on_submit():
             feed = Feed(
