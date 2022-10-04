@@ -16,6 +16,7 @@ from app.forms import RegistrationForm
 from app.forms import CreateFamilyForm
 from app.forms import AddChildForm
 from app.forms import LogFeedForm
+from app.forms import SetActiveChildForm
 from app.models import Child
 from app.models import Family
 from app.models import Feed
@@ -43,21 +44,12 @@ def index():
     if user_children is not None:
         log_feed_form = LogFeedForm()
         # TODO: Turn the list reorder into a general lib function
-        user_children_list = [(c.id, c.child_first_name) for c in user_children]
-        for c in user_children_list:
-            if c[0] == user_active_child:
-                user_children_list.insert(0, user_children_list.pop())
-
-        log_feed_form.selected_child.choices = user_children_list
         if log_feed_form.validate_on_submit():
             feed = Feed(
                 feed_type=log_feed_form.feed_type.data,
-                child_id=log_feed_form.selected_child.data,
+                child_id=user_active_child,
             )
             db.session.add(feed)
-            db.session.query(User).filter(User.id == current_user.get_id()).update(
-                {"active_child": log_feed_form.selected_child.data}
-            )
             db.session.commit()
             flash("Feed submitted!")
             return redirect(url_for("index"))
@@ -121,6 +113,7 @@ def register():
     return render_template("register.html", title="Register", form=form)
 
 
+# TODO: Clean up how we are defining active user across routes
 @app.route("/user/<username>", methods=["GET", "POST"])
 @login_required
 def user(username):
@@ -144,8 +137,34 @@ def user(username):
             db.session.commit()
             flash("Child added!")
             return redirect(url_for("user", username=current_user.username))
+
+        # TODO: Likely generalize all of this logic, along with the if none, then x stuff
+        if user_children is not None:
+            active_user = RouteUser(current_user)
+            user_active_child = active_user.user_active_child
+            active_user_children = active_user.user_children
+            set_active_child_form = SetActiveChildForm()
+            # TODO: Turn the list reorder into a general lib function
+            user_children_list = [
+                (c.id, c.child_first_name) for c in active_user_children
+            ]
+            for c in user_children_list:
+                if c[0] == user_active_child:
+                    user_children_list.insert(0, user_children_list.pop())
+
+            set_active_child_form.selected_child.choices = user_children_list
+            if set_active_child_form.validate_on_submit():
+                db.session.query(User).filter(User.id == current_user.get_id()).update(
+                    {"active_child": set_active_child_form.selected_child.data}
+                )
+                db.session.commit()
+                flash("Active child updated")
+                return redirect(url_for("user", username=current_user.username))
+        else:
+            set_active_child_form = None
     else:
         add_child_form = None
+        set_active_child_form = None
         user_children = None
         create_family_form = CreateFamilyForm()
         if create_family_form.validate_on_submit():
@@ -165,6 +184,7 @@ def user(username):
         user_children=user_children,
         create_family_form=create_family_form,
         add_child_form=add_child_form,
+        set_active_child_form=set_active_child_form,
     )
 
 

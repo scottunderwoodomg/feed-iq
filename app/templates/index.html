@@ -4,10 +4,12 @@
 {% block app_content %}
 <h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
 {% if user_children != None %}
-<h3>Submit a feed</h3>
-<div class="row">
-    <div class="col-md-4">
-        {{ wtf.quick_form(log_feed_form) }}
+<div>
+    <h4>Submit a feed for {{ user_active_child_name }}</h4>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(log_feed_form, form_type='inline') }}
+        </div>
     </div>
 </div>
 <br>

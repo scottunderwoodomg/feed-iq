@@ -5,8 +5,15 @@
 <h1>User: {{ user.username }}</h1>
 <hr>
 {% if create_family_form == None %}
-<h3>The {{ user_family.family_name }} Family:</h3>
-<p>Kids:</p>
+<h3>The {{ user_family.family_name }} Family</h3>
+{% if set_active_child_form != None %}
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(set_active_child_form, form_type='inline') }}
+    </div>
+</div>
+<br>
+{% endif %}
 <div>
     <table class="table">
         <thead>
@@ -26,7 +33,7 @@
 </div>
 <div class="row">
     <div class="col-md-4">
-        {{ wtf.quick_form(add_child_form) }}
+        {{ wtf.quick_form(add_child_form, form_type='inline') }}
     </div>
 </div>
 <br>
@@ -34,7 +41,7 @@
 {% if add_child_form == None %}
 <div class="row">
     <div class="col-md-4">
-        {{ wtf.quick_form(create_family_form) }}
+        {{ wtf.quick_form(create_family_form, form_type='inline') }}
     </div>
 </div>
 <br>

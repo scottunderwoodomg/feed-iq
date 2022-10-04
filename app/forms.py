@@ -46,14 +46,14 @@ class RegistrationForm(FlaskForm):
 
 class CreateFamilyForm(FlaskForm):
     family_name = StringField("Add a new family", validators=[DataRequired()])
-    submit = SubmitField("Create")
+    submit = SubmitField("Create Family")
 
 
 class AddChildForm(FlaskForm):
     child_first_name = StringField(
         "Add a child to your family", validators=[DataRequired()]
     )
-    submit = SubmitField("Create")
+    submit = SubmitField("Add Child")
 
     # TODO: Need to add protection against adding same child with name case changes
     def validate_child_first_name(self, child_first_name):
@@ -67,8 +67,12 @@ class AddChildForm(FlaskForm):
             )
 
 
-class LogFeedForm(FlaskForm):
+class SetActiveChildForm(FlaskForm):
     selected_child = SelectField("Select active child", coerce=int)
+    submit = SubmitField("Set Active Child")
+
+
+class LogFeedForm(FlaskForm):
     feed_type = RadioField(
         "Type of feed",
         choices=[
