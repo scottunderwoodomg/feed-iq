@@ -14,6 +14,24 @@ Generalized functions for returning feed metrics
 
 
 class UserMetrics:
+    def return_active_child_feed_metrics(self):
+        self.most_recent_feed_time = self.return_most_recent_feed_time()
+        self.most_recent_feed_display_time = self.prepare_display_date(
+            self.most_recent_feed_time
+        )
+        self.time_since_last_feed = self.format_duration(
+            self.return_min_since_last_feed()
+        )
+        self.current_day_feeds = self.return_current_day_feeds()
+
+    def active_child_has_feeds(self):
+        return (
+            Feed.query.filter(
+                Feed.child_id == self.active_child,
+            ).first()
+            is not None
+        )
+
     def return_most_recent_feed_time(self):
         return timezone("UTC").convert(
             db.session.query(db.func.max(Feed.feed_timestamp))
@@ -76,6 +94,7 @@ class UserMetrics:
     def format_date_string(self, dt):
         return dt.strftime(self.date_format)
 
+    # TODO: There has to be a better way to handle setting values to None for new users
     def __init__(self, user_active_child):
         # TODO: Replace hard-coded user_tz and date_format with dynamic variables
         #   import time
@@ -84,11 +103,11 @@ class UserMetrics:
         self.date_format = "%Y-%m-%d %I:%M %p"
         self.user_current_time = datetime.now()
         self.active_child = user_active_child
-        self.most_recent_feed_time = self.return_most_recent_feed_time()
-        self.most_recent_feed_display_time = self.prepare_display_date(
-            self.most_recent_feed_time
-        )
-        self.time_since_last_feed = self.format_duration(
-            self.return_min_since_last_feed()
-        )
-        self.current_day_feeds = self.return_current_day_feeds()
+
+        if self.active_child_has_feeds():
+            self.return_active_child_feed_metrics()
+        else:
+            self.most_recent_feed_time = None
+            self.most_recent_feed_display_time = None
+            self.time_since_last_feed = None
+            self.current_day_feeds = []

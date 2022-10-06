@@ -18,8 +18,8 @@
             <tbody>
                 {% for child in user_children %}
                 <tr>
-                    <td>{{ child.child_name }}</td>
-                    <td><a href="{{ url_for('feed_history', child_id=child.child_id) }}">feed history</a></td>
+                    <td>{{ child.1 }}</td>
+                    <td><a href="{{ url_for('feed_history', child_id=child.0) }}">feed history</a></td>
                     {% endfor %}
             </tbody>
         </table>
