@@ -16,12 +16,15 @@ from app.forms import RegistrationForm
 from app.forms import CreateFamilyForm
 from app.forms import AddChildForm
 from app.forms import LogFeedForm
+from app.forms import SetActiveChildForm
 from app.models import Child
 from app.models import Family
 from app.models import Feed
 from app.models import User
 
+from app.lib.metric_helpers import UserMetrics
 from app.lib.route_helpers import RouteUser
+from app.lib.route_helpers import return_current_date_string
 
 from datetime import datetime
 
@@ -33,43 +36,41 @@ from werkzeug.urls import url_parse
 @login_required
 def index():
     active_user = RouteUser(current_user)
-    user_children = active_user.user_children
-    user_active_child = active_user.user_active_child
-    user_active_child_name = active_user.user_active_child_name
+    active_child_metrics = UserMetrics(active_user.user_active_child)
 
-    if user_children is not None:
+    if active_user.user_children is not None:
         log_feed_form = LogFeedForm()
-        # TODO: Turn the list reorder into a general lib function
-        user_children_list = [(c.id, c.child_first_name) for c in user_children]
-        for c in user_children_list:
-            if c[0] == user_active_child:
-                user_children_list.insert(0, user_children_list.pop())
 
-        log_feed_form.selected_child.choices = user_children_list
+        # TODO: Replace static feed_type_list once user-level type management has been implemented
+        feed_type_list = [
+            ("breast", "Breast"),
+            ("bottle", "Bottle"),
+            ("breast_plus_bottle", "Breast Plus Bottle"),
+        ]
+        log_feed_form.feed_type.choices = feed_type_list
+
         if log_feed_form.validate_on_submit():
             feed = Feed(
                 feed_type=log_feed_form.feed_type.data,
-                child_id=log_feed_form.selected_child.data,
+                child_id=active_user.user_active_child,
             )
             db.session.add(feed)
-            db.session.query(User).filter(User.id == current_user.get_id()).update(
-                {"active_child": log_feed_form.selected_child.data}
-            )
             db.session.commit()
             flash("Feed submitted!")
             return redirect(url_for("index"))
     else:
         log_feed_form = None
 
-    feeds = Feed.query.filter_by(child_id=user_active_child).all()
-
     return render_template(
         "index.html",
         title="Home",
-        feeds=feeds,
-        user_children=user_children,
-        user_active_child_name=user_active_child_name,
+        current_date_string=return_current_date_string(),
         log_feed_form=log_feed_form,
+        user_children=active_user.user_children,
+        user_active_child_name=active_user.user_active_child_name,
+        feeds=active_child_metrics.current_day_feeds,
+        most_recent_feed=active_child_metrics.most_recent_feed_display_time,
+        time_since_last_feed=active_child_metrics.time_since_last_feed,
     )
 
 
@@ -112,24 +113,20 @@ def register():
     return render_template("register.html", title="Register", form=form)
 
 
+# TODO: The nested if statements in this route need to be broken up
 @app.route("/user/<username>", methods=["GET", "POST"])
 @login_required
 def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    user_family = Family.query.filter_by(user_id=current_user.get_id()).first()
+    active_user = RouteUser(current_user)
 
-    if user_family is not None:
+    if active_user.user_family is not None:
         create_family_form = None
-        user_children = [
-            {"child_id": c.id, "child_name": c.child_first_name}
-            for c in Child.query.filter_by(family_id=user_family.id)
-        ]
+
         add_child_form = AddChildForm()
         if add_child_form.validate_on_submit():
-            user_family_id = user_family.id
             child = Child(
                 child_first_name=add_child_form.child_first_name.data,
-                family_id=user_family_id,
+                family_id=active_user.user_family.id,
             )
             db.session.add(child)
             db.session.commit()
@@ -137,7 +134,7 @@ def user(username):
             return redirect(url_for("user", username=current_user.username))
     else:
         add_child_form = None
-        user_children = None
+        set_active_child_form = None
         create_family_form = CreateFamilyForm()
         if create_family_form.validate_on_submit():
             current_user_id = current_user.get_id()
@@ -149,13 +146,30 @@ def user(username):
             flash("Family created!")
             return redirect(url_for("user", username=current_user.username))
 
+    if active_user.user_children is not None:
+        set_active_child_form = SetActiveChildForm()
+
+        set_active_child_form.selected_child.choices = (
+            active_user.user_ordered_child_list
+        )
+        if set_active_child_form.validate_on_submit():
+            db.session.query(User).filter(User.id == current_user.get_id()).update(
+                {"active_child": set_active_child_form.selected_child.data}
+            )
+            db.session.commit()
+            flash("Active child updated")
+            return redirect(url_for("user", username=current_user.username))
+    else:
+        set_active_child_form = None
+
     return render_template(
         "user.html",
-        user=user,
-        user_family=user_family,
-        user_children=user_children,
+        user=current_user,
+        user_family=active_user.user_family,
+        user_children=active_user.user_ordered_child_list,
         create_family_form=create_family_form,
         add_child_form=add_child_form,
+        set_active_child_form=set_active_child_form,
     )
 
 

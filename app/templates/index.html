@@ -4,18 +4,44 @@
 {% block app_content %}
 <h1>Hey {{ current_user.username }}, welcome to FeedIQ!</h1>
 {% if user_children != None %}
-<h3>Submit a feed</h3>
-<div class="row">
-    <div class="col-md-4">
-        {{ wtf.quick_form(log_feed_form) }}
+<div>
+    <h4>Submit a feed for {{ user_active_child_name }}</h4>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(log_feed_form, form_type='inline') }}
+        </div>
     </div>
 </div>
 <br>
 {% endif %}
-<h3>Latest feeds for {{ user_active_child_name }}</h3>
-{% for feed in feeds %}
 <div>
-    <p>{{ feed.feed_type }} Feed at {{ feed.feed_timestamp }}</p>
+    <h3>Daily Feed Summary for {{ user_active_child_name }}: <span style="color:#808080">{{ current_date_string
+            }}</span>
+    </h3>
+    <table class="table">
+        <tr>
+            <td style="border-top: none;"><b>Most Recent Feed</b></td>
+            <td style="border-top: none;">{{most_recent_feed}}</td>
+        </tr>
+        <tr>
+            <td style="border-top: none;"><b>Time Since Most Recent Feed</b></td>
+            <td style="border-top: none;">{{time_since_last_feed}}</td>
+        </tr>
+    </table>
+    <h4>Daily Feed Log</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Feed Time (time since)</th>
+                <th>Feed Type</th>
+            </tr>
+        </thead>
+        {% for feed in feeds %}
+        <tr>
+            <td>{{ feed.feed_timestamp }}</td>
+            <td>{{feed.feed_type}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endblock %}}
 </div>
-{% endfor %}
-{% endblock %}}
